@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 1. Users collection: Customers can only read their own profile
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      // Writes must occur via backend Cloud Functions (Firebase Admin SDK)
+      allow write: if false;
+    }
+
+    // 2. Stores collection: Publicly readable so app can display store name & hours
+    match /stores/{storeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 3. Loyalty Cards collection: Customer can only read their own card
+    match /loyaltyCards/{userId} {
+      allow read: if isOwner(userId);
+      // Strictly no direct client writes! Prevents modifying stamps or rewards
+      allow write: if false;
+    }
+
+    // 4. Stamp Transactions: Customer can read their own transactions
+    match /stampTransactions/{transactionId} {
+      allow read: if isAuthenticated() && resource.data.telegramUserId == request.auth.uid;
+      // Strictly no direct client writes
+      allow write: if false;
+    }
+
+    // 5. Daily Stamp Claims: Anti-abuse ledger
+    match /dailyStampClaims/{claimId} {
+      allow read: if isAuthenticated() && resource.data.telegramUserId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // 6. Store Tags (QR & NFC public identifiers)
+    match /storeTags/{tagId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // 7. Security Events: Internal security audit log
+    match /securityEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

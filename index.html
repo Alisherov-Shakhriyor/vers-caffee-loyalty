@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VERS CAFFEE — Loyalty</title>
+<meta name="theme-color" content="#F6F0E8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* ===================== 1. TOKENS ===================== */
+:root{
+  --bg:#F6F0E8;--surface:#FFFCF7;--surface-2:#EFE6DA;--text:#2B1B12;--muted:#7C6B5D;--border:#E4D8C8;
+  --accent:#6F4E37;--accent-h:#5A3E2B;--accent-soft:#F1E7DB;--on-accent:#FFFFFF;--stamp:#D9A066;
+  --ok:#3F7D4E;--ok-soft:#E5F0E4;--warn:#C98A2B;--warn-fg:#855A12;--warn-soft:#F8EDD6;--danger:#BF4A3A;--danger-soft:#F8E4DF;
+  --card:#3A2418;--card-fg:#FBF4EA;--shadow:0 1px 2px rgba(58,36,24,.06);
+  --r:12px;--r-sm:8px;--r-lg:16px;--bar:0px;--t:.18s;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;--display:'Fraunces',Georgia,'Times New Roman',serif;
+}
+[data-theme="dark"]{
+  --bg:#17110D;--surface:#211914;--surface-2:#2D231B;--text:#F3EBE2;--muted:#A39384;--border:#372B21;
+  --accent:#C8955A;--accent-h:#D9A66C;--accent-soft:#33261A;--on-accent:#1A120C;--stamp:#D9A066;
+  --ok:#6FBF83;--ok-soft:#1B2A20;--warn:#E5B25D;--warn-fg:#E5B25D;--warn-soft:#2D2415;--danger:#E3705F;--danger-soft:#33201C;
+  --card:#2A1D14;--card-fg:#FBF4EA;--shadow:none;
+}
+/* ===================== 2. BASE ===================== */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.5 var(--font);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+input,select{font:inherit;color:var(--text)}
+h1,h2,h3,p{margin:0}
+h1,.sheet h2,.lc-count strong{font-family:var(--display);letter-spacing:-.01em}
+.brand .logo{color:var(--accent)}
+.flat .row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);width:100%;text-align:left}
+.flat .row:last-child{border-bottom:0}
+.hello{color:var(--text);margin:0 0 16px;font-size:15px}.hello span{color:var(--muted)}
+.av.sm{width:32px;height:32px;font-size:12px}
+.ok-t{color:var(--ok);font-size:13px;font-weight:500}
+.lc-name{font-family:var(--display);font-size:17px;font-weight:500}
+.actions{display:grid;gap:8px;margin-top:14px}
+.chip{border:0;background:var(--surface-2)}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ic{flex:none}.logo{height:22px;width:auto;display:block}.logo.lg{height:26px}
+.m{color:var(--muted);font-size:13px}.t{font-weight:500}.grow{flex:1;min-width:0}.center{text-align:center}.mt{margin-top:16px}.sp{flex:1}
+.ellip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ===================== 3. COMPONENTS ===================== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 16px;border-radius:10px;font-weight:500;font-size:14px;background:var(--surface);border:1px solid var(--border);transition:background var(--t),transform var(--t),border-color var(--t);white-space:nowrap}
+.btn:hover{background:var(--surface-2)}.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}.btn.primary:hover{background:var(--accent-h);border-color:var(--accent-h)}
+.btn.danger{color:var(--danger)}.btn.sm{height:32px;padding:0 12px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}.btn.ghost{border-color:transparent;background:transparent}.btn.ghost:hover{background:var(--surface-2)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.icon-btn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--muted);transition:background var(--t)}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:500;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.warn{background:var(--warn-soft);color:var(--warn-fg)}
+.badge.danger{background:var(--danger-soft);color:var(--danger)}.badge.acc{background:var(--accent-soft);color:var(--accent)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.av.lg{width:64px;height:64px;font-size:22px}
+.ib{width:36px;height:36px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}
+.ib.ok{background:var(--ok-soft);color:var(--ok)}.ib.bad{background:var(--danger-soft);color:var(--danger)}.ib.warn{background:var(--warn-soft);color:var(--warn-fg)}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.panel-h h3{font-size:15px;font-weight:600}.panel-b{padding:16px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px}
+.seg button{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);transition:background var(--t)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.in{height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;background:var(--surface);min-width:0;width:100%}
+.in:focus{border-color:var(--accent);outline:none}
+.fld{display:grid;gap:6px;margin-bottom:14px}.fld label,.fld>span{font-size:13px;font-weight:500}.fld small{color:var(--muted);font-size:12px}
+.sw{position:relative;display:inline-block;width:40px;height:22px;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;background:var(--border);border-radius:11px;transition:background var(--t)}
+.sw span::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--t)}
+.sw input:checked+span{background:var(--accent)}.sw input:checked+span::after{transform:translateX(18px)}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.bar{height:4px;background:rgba(255,255,255,.16);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--stamp);transition:width .4s ease}
+.bar.l{background:var(--surface-2);min-width:70px}.bar.l i{background:var(--accent)}
+.empty{display:grid;justify-items:center;gap:8px;padding:36px 16px;color:var(--muted);text-align:center}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:32px;padding:0 14px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:500;color:var(--muted);transition:background var(--t)}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* ===================== 4. SHELL ===================== */
+#app{padding-top:var(--bar)}
+.anim{animation:vin .2s ease}
+@keyframes vin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+/* customer phone container */
+.phone{max-width:430px;margin:0 auto;min-height:calc(100dvh - var(--bar));position:relative;padding-bottom:88px}
+@media(min-width:520px){.phone{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+.cscreen{padding:16px}
+.c-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.06em;font-size:14px}
+.me{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:20}
+.bnav button{display:grid;justify-items:center;gap:2px;padding:6px 0;font-size:11px;font-weight:500;color:var(--muted);border-radius:10px;transition:color var(--t)}
+.bnav button.on{color:var(--accent)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:30px 0 4px}.sec h2{font-size:13px;font-weight:500;color:var(--muted)}
+.sec button{font-size:13px;color:var(--accent);font-weight:500}
+.grp{font-size:12px;font-weight:500;color:var(--muted);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.lcard{background:var(--card);color:var(--card-fg);border-radius:var(--r-lg);padding:22px 20px 20px}
+.lc-top{display:flex;justify-content:space-between;align-items:center}
+.lc-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px;letter-spacing:.08em}.lc-brand .logo{height:18px}
+.stamps{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:10px;margin:22px 0}
+.slot{aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);display:grid;place-items:center;color:rgba(255,255,255,.35);font-size:12px;font-style:normal}
+.slot i{font-style:normal}.slot.on{background:var(--stamp);border-color:var(--stamp);color:var(--card)}
+.slot.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.lc-count{font-size:14px;margin-bottom:10px;color:rgba(255,255,255,.8)}.lc-count strong{font-size:24px;font-weight:600;color:var(--card-fg)}
+.lc-msg{margin-top:4px;font-size:14px;color:rgba(255,255,255,.65)}
+
+/* ===================== 5. OVERLAYS ===================== */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(10,10,10,.45);opacity:0;transition:opacity var(--t);display:flex}
+.overlay.show{opacity:1}
+#sheet{align-items:flex-end;justify-content:center}
+#modal{align-items:center;justify-content:center;padding:16px}
+.sheet{width:100%;max-width:430px;background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(28px);transition:transform .22s ease;max-height:94dvh;overflow:auto}
+.show .sheet{transform:none}
+.sheet h2{font-size:18px;font-weight:600;text-align:center}.sheet .sub{text-align:center;color:var(--muted);font-size:14px;margin:4px 0 16px}
+.step{animation:fade .15s ease}@keyframes fade{from{opacity:0}to{opacity:1}}
+.opt{display:flex;align-items:center;gap:14px;width:100%;padding:14px;border:1px solid var(--border);border-radius:12px;text-align:left;margin-bottom:10px;transition:border-color var(--t),background var(--t)}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}.opt .ib{width:44px;height:44px;background:var(--accent-soft);color:var(--accent)}
+.note{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 10px;margin:12px 0}
+.nfc{width:112px;height:112px;margin:18px auto;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;position:relative}
+.nfc::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);animation:ring 1.8s ease-out infinite}
+@keyframes ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.5);opacity:0}}
+.spin{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto}
+@keyframes rot{to{transform:rotate(360deg)}}
+.mark{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:8px auto 16px;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+.mark.ok{background:var(--ok-soft);color:var(--ok)}.mark.bad{background:var(--danger-soft);color:var(--danger)}.mark.warn{background:var(--warn-soft);color:var(--warn-fg)}
+
+#toasts{position:fixed;top:calc(var(--bar) + 10px);left:50%;transform:translateX(-50%);z-index:200;display:grid;gap:8px;width:min(92vw,380px);pointer-events:none}
+.toast{background:#171717;color:#fff;padding:11px 14px;border-radius:10px;font-size:14px;display:flex;gap:10px;align-items:center;animation:tin .2s ease}
+[data-theme="dark"] .toast{background:#F2F2F0;color:#171717}
+.toast.ok .ic{color:#4CC38A}.toast.bad .ic{color:#FF8A8A}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<!-- VERS CAFFEE logo (single source, recolored via currentColor) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<path id="logo-path" fill="currentColor" fill-rule="evenodd" d="M415.5,166.2 L412.2,165.2 L398.5,165.0 L287.2,165.0 L281.5,165.5 L279.5,166.2 L278.0,167.8 L268.8,191.5 L265.2,198.8 L259.2,213.2 L257.0,220.5 L250.5,235.0 L249.2,239.2 L249.8,240.5 L253.8,240.8 L272.5,232.8 L273.2,232.8 L277.8,230.8 L287.5,227.5 L291.2,225.8 L303.8,221.5 L332.2,210.0 L336.8,208.8 L347.2,204.8 L349.0,204.8 L349.5,205.2 L349.2,206.0 L343.8,211.0 L331.0,223.8 L325.0,229.0 L313.0,240.8 L306.8,246.0 L301.2,251.8 L295.5,257.0 L292.8,259.0 L283.0,269.5 L274.0,277.5 L272.2,280.2 L272.2,284.5 L274.0,288.5 L285.8,309.2 L298.2,333.2 L299.0,333.2 L306.2,321.8 L314.8,311.2 L319.0,304.8 L339.5,277.0 L342.8,272.0 L348.8,264.5 L358.2,250.8 L369.2,236.8 L374.8,228.8 L395.8,201.2 L398.8,196.2 L402.0,192.2 L415.0,173.0 L416.5,169.8 L416.5,167.8 Z M106.5,165.8 L105.2,167.5 L106.0,171.2 L108.0,175.2 L115.0,186.8 L125.5,206.0 L128.8,211.0 L134.5,221.5 L138.0,226.8 L138.2,227.8 L140.8,231.5 L144.2,238.0 L147.0,242.0 L162.2,268.0 L181.0,298.5 L187.2,309.5 L204.2,336.8 L218.2,360.5 L226.0,372.0 L230.0,379.2 L233.0,382.8 L236.2,385.5 L240.0,387.5 L243.2,388.5 L246.0,389.0 L250.0,388.8 L253.5,387.8 L256.2,386.2 L260.8,382.2 L271.8,369.2 L273.2,366.8 L284.2,352.2 L288.8,345.5 L291.8,342.0 L292.2,340.8 L292.2,338.5 L289.0,332.8 L285.8,325.5 L273.0,303.2 L270.5,297.2 L267.5,291.5 L263.5,285.0 L258.2,274.5 L252.8,264.8 L245.5,250.0 L241.0,242.0 L236.2,232.0 L231.8,224.2 L218.8,198.2 L216.8,195.0 L205.8,173.0 L203.5,167.8 L201.5,166.0 L198.8,165.2 L109.2,165.0 Z"/>
+</defs></svg>
+
+<div id="app"></div>
+<div class="overlay" id="sheet" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+<noscript>JavaScript is required to use the VERS CAFFEE loyalty program.</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
