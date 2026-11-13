@@ -14,7 +14,7 @@ function verifyTelegramWebAppData(rawInitData, botToken, maxAgeSeconds = 86400) 
   if (!rawInitData || typeof rawInitData !== 'string') {
     return { valid: false, error: 'MISSING_INIT_DATA' };
   }
-  if (!botToken || typeof botToken !== 'string') {
+  if (!botToken || typeof botToken !== 'string' || botToken.trim() === '') {
     return { valid: false, error: 'MISSING_BOT_TOKEN' };
   }
 

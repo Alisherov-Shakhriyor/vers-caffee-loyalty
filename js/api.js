@@ -13,8 +13,9 @@ import { API_BASE } from './config.js';
  * @param {string} params.storeCode - Store public code e.g. "VERS_CAFFEE_MAIN"
  * @param {string} params.method - "QR" | "NFC"
  * @param {string} [params.idempotencyKey]
+ * @param {string} [params.userId]
  */
-export async function collectStamp({ storeCode, method = 'QR', idempotencyKey = null }) {
+export async function collectStamp({ storeCode, method = 'QR', idempotencyKey = null, userId = null }) {
   const token = await getIdToken();
   const key = idempotencyKey || ('idem_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
 
@@ -27,7 +28,8 @@ export async function collectStamp({ storeCode, method = 'QR', idempotencyKey = 
     body: JSON.stringify({
       storeCode,
       method,
-      idempotencyKey: key
+      idempotencyKey: key,
+      fallbackUserId: userId
     })
   });
 

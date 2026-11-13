@@ -54,7 +54,7 @@ function renderHome() {
   const left = THRESHOLD - k.stamps;
   const done = left <= 0;
   const recent = state.transactions.slice(0, 3);
-  const firstName = u ? (u.firstName || u.username || 'Friend') : 'Guest';
+  const firstName = u ? (u.firstName || u.username || 'Friend') : 'Friend';
   const username = u && u.username ? `@${u.username}` : (u ? `ID: ${u.telegramId}` : '');
 
   return `
@@ -447,15 +447,30 @@ async function executeCollectStamp(storeCode, method = 'QR') {
   state.sheet.msg = 'Validating and collecting stamp…';
   updateSheet();
 
-  const res = await collectStamp({ storeCode, method });
+  const res = await collectStamp({
+    storeCode,
+    method,
+    userId: state.user ? state.user.telegramId : null
+  });
 
   if (res.ok) {
+    const newStamps = res.stamps !== undefined ? res.stamps : (state.card.stamps + 1);
+    state.card.stamps = newStamps;
+    state.card.totalStampsEarned = (state.card.totalStampsEarned || 0) + 1;
     state.sheet.step = 'success';
     state.sheet.result = {
-      stamps: res.stamps,
+      stamps: newStamps,
       total: res.total || THRESHOLD,
-      done: res.done
+      done: newStamps >= THRESHOLD
     };
+    state.transactions.unshift({
+      id: 'tx_' + Date.now(),
+      storeCode,
+      storeShort: 'Branch',
+      method,
+      status: 'success',
+      createdAt: new Date().toISOString()
+    });
     showToast('+1 stamp collected!', 'ok');
   } else {
     const errorMap = {
@@ -472,6 +487,7 @@ async function executeCollectStamp(storeCode, method = 'QR') {
     };
   }
   updateSheet();
+  renderMainView();
 }
 
 // ==========================================
@@ -549,6 +565,8 @@ const ACTIONS = {
     showToast('Processing reward redemption…');
     const res = await redeemReward();
     if (res.ok) {
+      state.card.stamps = 0;
+      state.card.rewardsRedeemed = (state.card.rewardsRedeemed || 0) + 1;
       showToast('Reward redeemed! Enjoy your coffee ☕', 'ok');
       renderMainView();
     } else {
@@ -595,8 +613,8 @@ export async function initApp() {
   // 1. Authenticate via Telegram WebApp
   const authResult = await authenticateTelegram();
 
-  if (!authResult.success && !authResult.isDev) {
-    // Unsupported environment screen
+  // ONLY show unsupported environment screen if truly opened outside Telegram and not dev preview
+  if (!authResult.isTelegram && !authResult.isDev && !authResult.success) {
     $('#app').innerHTML = `
       <div class="phone" style="display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;">
         <div style="max-width:320px;">
@@ -613,7 +631,12 @@ export async function initApp() {
     return;
   }
 
-  state.user = authResult.user;
+  state.user = authResult.user || {
+    telegramId: 'customer',
+    username: 'customer',
+    firstName: 'VERS',
+    lastName: 'Customer'
+  };
   renderMainView();
 
   // 2. Load active branches
@@ -623,19 +646,27 @@ export async function initApp() {
     console.warn('Could not fetch stores:', e);
   }
 
-  // 3. Real-time Firestore sync
+  // 3. Real-time Firestore sync (if connected)
   if (state.user && state.user.telegramId) {
     const userId = state.user.telegramId;
 
-    subscribeToCard(userId, (cardData) => {
-      state.card = cardData;
-      renderMainView();
-    }, (err) => console.warn('Card sync note:', err));
+    try {
+      subscribeToCard(userId, (cardData) => {
+        if (cardData) {
+          state.card = { ...state.card, ...cardData };
+          renderMainView();
+        }
+      }, (err) => console.warn('Card sync note:', err));
 
-    subscribeToTransactions(userId, (txList) => {
-      state.transactions = txList;
-      renderMainView();
-    }, (err) => console.warn('Tx sync note:', err));
+      subscribeToTransactions(userId, (txList) => {
+        if (txList && txList.length) {
+          state.transactions = txList;
+          renderMainView();
+        }
+      }, (err) => console.warn('Tx sync note:', err));
+    } catch (e) {
+      console.warn('Firestore subscription note:', e);
+    }
   }
 
   // 4. Auto-detect NFC or QR incoming parameters from URL

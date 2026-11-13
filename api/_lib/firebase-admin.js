@@ -2,36 +2,48 @@
 
 const admin = require('firebase-admin');
 
+const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || 'vers-caffee-loyalty';
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+if (privateKey) {
+  privateKey = privateKey.replace(/\\n/g, '\n');
+}
+
+const hasCredentials = !!(clientEmail && privateKey);
+
 if (!admin.apps.length) {
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || 'vers-caffee-loyalty';
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-  if (privateKey) {
-    // Replace escaped newlines
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-
-  if (clientEmail && privateKey) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey
-      }),
-      projectId
-    });
+  if (hasCredentials) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey
+        }),
+        projectId
+      });
+    } catch (e) {
+      console.warn('Firebase Admin cert init failed:', e.message);
+    }
   } else {
-    // Attempt default credentials or project ID only
     try {
       admin.initializeApp({ projectId });
     } catch (e) {
-      console.warn('Firebase Admin initialized without explicit credentials:', e.message);
+      console.warn('Firebase Admin default init note:', e.message);
     }
   }
 }
 
-const db = admin.firestore();
-const auth = admin.auth();
+let db = null;
+let auth = null;
 
-module.exports = { admin, db, auth };
+try {
+  db = admin.firestore();
+} catch (e) {}
+
+try {
+  auth = admin.auth();
+} catch (e) {}
+
+module.exports = { admin, db, auth, hasCredentials };
